@@ -13,8 +13,8 @@ from tqdm import tqdm
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
 
 FILES = {
-    "StockUniteLegale": "https://files.data.gouv.fr/insee-sirene/StockUniteLegale_utf8.zip",
-    "StockEtablissement": "https://files.data.gouv.fr/insee-sirene/StockEtablissement_utf8.zip",
+    "StockUniteLegale": "https://object.files.data.gouv.fr/data-pipeline-open/siren/stock/StockUniteLegale_utf8.zip",
+    "StockEtablissement": "https://object.files.data.gouv.fr/data-pipeline-open/siren/stock/StockEtablissement_utf8.zip",
 }
 
 

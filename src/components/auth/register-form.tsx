@@ -7,14 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -49,66 +41,74 @@ export function RegisterForm() {
   }
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold tracking-tight">
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
           Créer un compte
-        </CardTitle>
-        <CardDescription>Alvora Partners — Base M&A France</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nom complet</Label>
-            <Input
-              id="fullName"
-              placeholder="Jean Dupont"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+        </h1>
+        <p className="mt-2 text-zinc-500">
+          Rejoignez Alvora Partners Screening OS
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="analyste@alvora.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Min. 6 caractères"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Création..." : "Créer le compte"}
-          </Button>
-          <p className="text-sm text-zinc-500">
-            Déjà un compte ?{" "}
-            <Link href="/login" className="text-zinc-900 underline">
-              Se connecter
-            </Link>
-          </p>
-        </CardFooter>
+        )}
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Nom complet</Label>
+          <Input
+            id="fullName"
+            placeholder="Jean Dupont"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            className="h-11 rounded-xl"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="analyste@alvora.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="h-11 rounded-xl"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Mot de passe</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Min. 6 caractères"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="h-11 rounded-xl"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          className="h-11 w-full rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+          disabled={loading}
+        >
+          {loading ? "Création..." : "Créer le compte"}
+        </Button>
+
+        <p className="text-center text-sm text-zinc-500">
+          Déjà un compte ?{" "}
+          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+            Se connecter
+          </Link>
+        </p>
       </form>
-    </Card>
+    </div>
   );
 }

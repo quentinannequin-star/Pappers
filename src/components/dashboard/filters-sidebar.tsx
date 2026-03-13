@@ -124,49 +124,50 @@ export function FiltersSidebar({
   const effectifOptions = Object.entries(EFFECTIF_LABELS);
 
   return (
-    <div className="flex h-full w-80 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex items-center justify-between p-4 pb-2">
+    <div className="flex h-full w-80 flex-col border-r border-zinc-100 bg-white">
+      <div className="flex items-center justify-between p-5 pb-3">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4" />
-          <h2 className="font-semibold">Filtres</h2>
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
+          </div>
+          <h2 className="font-semibold text-zinc-900">Filtres</h2>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleReset}>
-          <X className="mr-1 h-3 w-3" />
-          Reset
+        <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-zinc-400 hover:text-zinc-600">
+          Réinitialiser
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1 px-5">
         <div className="space-y-5 pb-4">
           {/* Recherche par nom */}
           <div className="space-y-2">
-            <Label>Recherche par nom</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Recherche par nom</Label>
             <Input
               placeholder="Dénomination..."
               value={denomination}
               onChange={(e) => setDenomination(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="rounded-xl"
             />
           </div>
 
-          <Separator />
+          <Separator className="bg-zinc-100" />
 
           {/* NAF Code */}
           <div className="space-y-2">
-            <Label>Secteur (code NAF)</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Secteur (code NAF)</Label>
             <Input
               placeholder="Rechercher un code NAF..."
               value={nafSearch}
               onChange={(e) => setNafSearch(e.target.value)}
-              className="text-sm"
+              className="rounded-xl text-sm"
             />
             {selectedNaf.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {selectedNaf.map((code) => (
                   <Badge
                     key={code}
-                    variant="secondary"
-                    className="cursor-pointer text-xs"
+                    className="cursor-pointer rounded-lg bg-indigo-100 text-xs text-indigo-700 hover:bg-indigo-200"
                     onClick={() => toggleNaf(code)}
                   >
                     {code} <X className="ml-1 h-3 w-3" />
@@ -174,19 +175,19 @@ export function FiltersSidebar({
                 ))}
               </div>
             )}
-            <ScrollArea className="h-40 rounded-md border">
-              <div className="p-2">
+            <ScrollArea className="h-40 rounded-xl border border-zinc-100">
+              <div className="p-1.5">
                 {filteredNaf.slice(0, 100).map((naf) => (
                   <button
                     key={naf.code}
                     onClick={() => toggleNaf(naf.code)}
-                    className={`w-full rounded px-2 py-1 text-left text-xs hover:bg-zinc-100 ${
+                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-indigo-50 ${
                       selectedNaf.includes(naf.code)
-                        ? "bg-zinc-100 font-medium"
-                        : ""
+                        ? "bg-indigo-50 font-medium text-indigo-700"
+                        : "text-zinc-600"
                     }`}
                   >
-                    <span className="font-mono text-zinc-500">{naf.code}</span>{" "}
+                    <span className="font-mono text-zinc-400">{naf.code}</span>{" "}
                     {naf.libelle}
                   </button>
                 ))}
@@ -194,11 +195,11 @@ export function FiltersSidebar({
             </ScrollArea>
           </div>
 
-          <Separator />
+          <Separator className="bg-zinc-100" />
 
           {/* Région */}
           <div className="space-y-2">
-            <Label>Région</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Région</Label>
             {selectedRegions.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {selectedRegions.map((code) => {
@@ -206,8 +207,7 @@ export function FiltersSidebar({
                   return (
                     <Badge
                       key={code}
-                      variant="secondary"
-                      className="cursor-pointer text-xs"
+                      className="cursor-pointer rounded-lg bg-emerald-100 text-xs text-emerald-700 hover:bg-emerald-200"
                       onClick={() => toggleRegion(code)}
                     >
                       {region?.nom} <X className="ml-1 h-3 w-3" />
@@ -216,16 +216,16 @@ export function FiltersSidebar({
                 })}
               </div>
             )}
-            <ScrollArea className="h-32 rounded-md border">
-              <div className="p-2">
+            <ScrollArea className="h-32 rounded-xl border border-zinc-100">
+              <div className="p-1.5">
                 {regions.map((region) => (
                   <button
                     key={region.code}
                     onClick={() => toggleRegion(region.code)}
-                    className={`w-full rounded px-2 py-1 text-left text-xs hover:bg-zinc-100 ${
+                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-emerald-50 ${
                       selectedRegions.includes(region.code)
-                        ? "bg-zinc-100 font-medium"
-                        : ""
+                        ? "bg-emerald-50 font-medium text-emerald-700"
+                        : "text-zinc-600"
                     }`}
                   >
                     {region.nom}
@@ -237,7 +237,7 @@ export function FiltersSidebar({
 
           {/* Département */}
           <div className="space-y-2">
-            <Label>Département</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Département</Label>
             {selectedDepts.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {selectedDepts.map((code) => {
@@ -245,8 +245,7 @@ export function FiltersSidebar({
                   return (
                     <Badge
                       key={code}
-                      variant="secondary"
-                      className="cursor-pointer text-xs"
+                      className="cursor-pointer rounded-lg bg-amber-100 text-xs text-amber-700 hover:bg-amber-200"
                       onClick={() => toggleDept(code)}
                     >
                       {code} - {dept?.nom} <X className="ml-1 h-3 w-3" />
@@ -255,19 +254,19 @@ export function FiltersSidebar({
                 })}
               </div>
             )}
-            <ScrollArea className="h-32 rounded-md border">
-              <div className="p-2">
+            <ScrollArea className="h-32 rounded-xl border border-zinc-100">
+              <div className="p-1.5">
                 {filteredDepts.map((dept) => (
                   <button
                     key={dept.code}
                     onClick={() => toggleDept(dept.code)}
-                    className={`w-full rounded px-2 py-1 text-left text-xs hover:bg-zinc-100 ${
+                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-amber-50 ${
                       selectedDepts.includes(dept.code)
-                        ? "bg-zinc-100 font-medium"
-                        : ""
+                        ? "bg-amber-50 font-medium text-amber-700"
+                        : "text-zinc-600"
                     }`}
                   >
-                    <span className="font-mono text-zinc-500">{dept.code}</span>{" "}
+                    <span className="font-mono text-zinc-400">{dept.code}</span>{" "}
                     {dept.nom}
                   </button>
                 ))}
@@ -275,18 +274,18 @@ export function FiltersSidebar({
             </ScrollArea>
           </div>
 
-          <Separator />
+          <Separator className="bg-zinc-100" />
 
           {/* Effectif */}
           <div className="space-y-2">
-            <Label>Tranche effectif</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Tranche effectif</Label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-xs text-zinc-500">Min</span>
+                <span className="text-xs text-zinc-400">Min</span>
                 <select
                   value={effectifMin}
                   onChange={(e) => setEffectifMin(e.target.value)}
-                  className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs"
+                  className="w-full rounded-xl border border-zinc-100 bg-white px-2.5 py-2 text-xs"
                 >
                   {effectifOptions.map(([code, label]) => (
                     <option key={code} value={code}>
@@ -296,11 +295,11 @@ export function FiltersSidebar({
                 </select>
               </div>
               <div>
-                <span className="text-xs text-zinc-500">Max</span>
+                <span className="text-xs text-zinc-400">Max</span>
                 <select
                   value={effectifMax}
                   onChange={(e) => setEffectifMax(e.target.value)}
-                  className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs"
+                  className="w-full rounded-xl border border-zinc-100 bg-white px-2.5 py-2 text-xs"
                 >
                   {effectifOptions.map(([code, label]) => (
                     <option key={code} value={code}>
@@ -314,21 +313,23 @@ export function FiltersSidebar({
 
           {/* Ancienneté */}
           <div className="space-y-2">
-            <Label>Ancienneté minimum: {minAge} ans</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+              Ancienneté minimum: <span className="text-indigo-600">{minAge} ans</span>
+            </Label>
             <input
               type="range"
               min={0}
               max={50}
               value={minAge}
               onChange={(e) => setMinAge(parseInt(e.target.value))}
-              className="w-full"
+              className="w-full accent-indigo-600"
             />
           </div>
         </div>
       </ScrollArea>
 
-      <div className="border-t border-zinc-200 p-4">
-        <Button onClick={handleSearch} className="w-full">
+      <div className="border-t border-zinc-100 p-5">
+        <Button onClick={handleSearch} className="h-11 w-full rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">
           <Search className="mr-2 h-4 w-4" />
           Rechercher
         </Button>
