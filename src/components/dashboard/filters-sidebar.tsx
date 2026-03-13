@@ -151,7 +151,7 @@ export function FiltersSidebar({
             />
           </div>
 
-          <Separator className="bg-zinc-800" />
+          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
 
           {/* NAF Code */}
           <div className="space-y-2">
@@ -195,7 +195,7 @@ export function FiltersSidebar({
             </ScrollArea>
           </div>
 
-          <Separator className="bg-zinc-800" />
+          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
 
           {/* Région */}
           <div className="space-y-2">
@@ -274,7 +274,7 @@ export function FiltersSidebar({
             </ScrollArea>
           </div>
 
-          <Separator className="bg-zinc-800" />
+          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
 
           {/* Effectif */}
           <div className="space-y-2">
