@@ -17,8 +17,8 @@ export function LandingPage() {
           <h1 className="text-center text-7xl font-bold tracking-tighter text-white sm:text-8xl">
             Screening OS
           </h1>
-          <p className="mt-2 max-w-md text-center text-lg text-white/50">
-            Base de screening M&A pour les entreprises françaises
+          <p className="mt-2 max-w-lg text-center text-lg text-white/50">
+            Parce que Pappers, c&apos;est du vol — 300&nbsp;€ pour une liste mdr
           </p>
         </div>
 
@@ -33,7 +33,7 @@ export function LandingPage() {
 
       <div className="pointer-events-none absolute bottom-8 z-10">
         <span className="text-xs text-white/20">
-          6M+ entreprises francaises
+          6M+ entreprises françaises · 0 € · built with love & rage
         </span>
       </div>
     </div>

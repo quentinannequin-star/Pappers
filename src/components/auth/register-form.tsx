@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { isEmailAllowed } from "@/lib/allowed-emails";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,12 @@ export function RegisterForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (!isEmailAllowed(email)) {
+      setError("Accès réservé à l'équipe Alvora. T'es pas sur la liste frérot 😤");
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
