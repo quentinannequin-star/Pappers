@@ -18,7 +18,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     getRefDepartements(),
   ]);
 
-  const hasFilters = params.naf || params.depts || params.q || params.regions;
+  const hasFilters = params.naf || params.depts || params.q || params.regions || params.eff_min || params.eff_max || params.age || params.page;
   const page = parseInt(params.page || "1");
   const perPage = 50;
 
