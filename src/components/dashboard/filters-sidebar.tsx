@@ -177,7 +177,7 @@ export function FiltersSidebar({
             )}
             <ScrollArea className="h-40 rounded-xl border border-zinc-800">
               <div className="p-1.5">
-                {filteredNaf.slice(0, 100).map((naf) => (
+                {filteredNaf.map((naf) => (
                   <button
                     key={naf.code}
                     onClick={() => toggleNaf(naf.code)}
