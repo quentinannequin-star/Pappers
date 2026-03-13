@@ -46,17 +46,17 @@ export function LoginForm() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+        <h1 className="text-3xl font-bold tracking-tight text-white">
           Bon retour
         </h1>
-        <p className="mt-2 text-zinc-500">
+        <p className="mt-2 text-zinc-400">
           Connectez-vous pour accéder au screening
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-xl bg-red-950/50 px-4 py-3 text-sm text-red-400">
             {error}
           </div>
         )}
@@ -92,9 +92,9 @@ export function LoginForm() {
           {loading ? "Connexion..." : "Se connecter"}
         </Button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-zinc-400">
           Pas de compte ?{" "}
-          <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-700">
+          <Link href="/register" className="font-medium text-indigo-400 hover:text-indigo-300">
             Créer un compte
           </Link>
         </p>

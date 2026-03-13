@@ -16,13 +16,13 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-6 backdrop-blur-lg">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-lg">
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600">
           <Search className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-bold tracking-tight text-zinc-900">
+          <h1 className="text-base font-bold tracking-tight text-white">
             Screening OS
           </h1>
           <span className="text-xs text-zinc-400">Alvora Partners</span>
@@ -32,7 +32,7 @@ export function Header() {
         variant="ghost"
         size="sm"
         onClick={handleLogout}
-        className="text-zinc-400 hover:text-zinc-600"
+        className="text-zinc-500 hover:text-zinc-300"
       >
         <LogOut className="mr-2 h-4 w-4" />
         Déconnexion

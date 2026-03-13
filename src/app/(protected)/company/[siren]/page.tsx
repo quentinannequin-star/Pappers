@@ -60,7 +60,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
                 <CardTitle className="text-2xl">
                   {company.denomination || "Sans dénomination"}
                 </CardTitle>
-                <p className="mt-1 font-mono text-sm text-zinc-500">
+                <p className="mt-1 font-mono text-sm text-zinc-400">
                   SIREN {siren}
                 </p>
               </div>
@@ -171,11 +171,11 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
                 {etablissements.map((etab) => (
                   <div
                     key={etab.siret}
-                    className="flex items-start justify-between rounded-lg border border-zinc-100 p-3"
+                    className="flex items-start justify-between rounded-lg border border-zinc-800 p-3"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-zinc-500">
+                        <span className="font-mono text-xs text-zinc-400">
                           {etab.siret}
                         </span>
                         {etab.est_siege && (
@@ -189,12 +189,12 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
                           .filter(Boolean)
                           .join(" ")}
                       </p>
-                      <p className="text-sm text-zinc-500">
+                      <p className="text-sm text-zinc-400">
                         {etab.code_postal} {etab.commune}
                       </p>
                     </div>
                     {etab.enseigne && (
-                      <span className="text-sm text-zinc-600">
+                      <span className="text-sm text-zinc-400">
                         {etab.enseigne}
                       </span>
                     )}
@@ -218,7 +218,7 @@ function InfoItem({
 }) {
   return (
     <div>
-      <dt className="text-xs text-zinc-500">{label}</dt>
+      <dt className="text-xs text-zinc-400">{label}</dt>
       <dd className="text-sm font-medium">{value || "—"}</dd>
     </div>
   );

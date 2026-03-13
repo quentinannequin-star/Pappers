@@ -50,17 +50,17 @@ export function RegisterForm() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+        <h1 className="text-3xl font-bold tracking-tight text-white">
           Créer un compte
         </h1>
-        <p className="mt-2 text-zinc-500">
+        <p className="mt-2 text-zinc-400">
           Rejoignez Alvora Partners Screening OS
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-xl bg-red-950/50 px-4 py-3 text-sm text-red-400">
             {error}
           </div>
         )}
@@ -109,9 +109,9 @@ export function RegisterForm() {
           {loading ? "Création..." : "Créer le compte"}
         </Button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-zinc-400">
           Déjà un compte ?{" "}
-          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+          <Link href="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
             Se connecter
           </Link>
         </p>

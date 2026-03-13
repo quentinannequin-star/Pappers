@@ -44,7 +44,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
-      <Suspense fallback={<div className="w-80 animate-pulse bg-zinc-100" />}>
+      <Suspense fallback={<div className="w-80 animate-pulse bg-zinc-800" />}>
         <FiltersSidebar
           nafCodes={nafCodes}
           regions={regions}

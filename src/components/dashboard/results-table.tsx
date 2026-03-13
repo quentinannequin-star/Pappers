@@ -79,16 +79,16 @@ export function ResultsTable({
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50/50">
+    <div className="flex flex-1 flex-col bg-zinc-950">
       {/* Header bar */}
-      <div className="flex items-center justify-between bg-white px-6 py-4">
+      <div className="flex items-center justify-between bg-zinc-900 px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="rounded-2xl bg-indigo-50 px-5 py-2.5">
-            <span className="text-3xl font-bold text-indigo-600">{total.toLocaleString("fr-FR")}</span>
-            <span className="ml-2 text-sm font-medium text-indigo-400">sociétés</span>
+          <div className="rounded-2xl bg-indigo-950 px-5 py-2.5">
+            <span className="text-3xl font-bold text-indigo-400">{total.toLocaleString("fr-FR")}</span>
+            <span className="ml-2 text-sm font-medium text-indigo-500">sociétés</span>
           </div>
           {enrichedCount > 0 && (
-            <Badge className="rounded-lg bg-emerald-100 text-emerald-700">
+            <Badge className="rounded-lg bg-emerald-950 text-emerald-400">
               {enrichedCount} enrichie{enrichedCount > 1 ? "s" : ""}
             </Badge>
           )}
@@ -99,7 +99,7 @@ export function ResultsTable({
             size="sm"
             onClick={handleEnrich}
             disabled={enriching || results.length === 0}
-            className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+            className="rounded-xl border-indigo-800 text-indigo-400 hover:bg-indigo-950"
           >
             <Sparkles className="mr-2 h-4 w-4" />
             {enriching ? "Enrichissement..." : "Enrichir"}
@@ -119,18 +119,18 @@ export function ResultsTable({
 
       {/* Table */}
       <div className="flex-1 overflow-auto p-4">
-        <div className="rounded-2xl border border-zinc-100 bg-white shadow-sm">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-100 hover:bg-transparent">
-                <TableHead className="w-24 text-xs font-medium uppercase tracking-wider text-zinc-400">SIREN</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Dénomination</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Activité</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Ville</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Département</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Effectif</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-400">Dirigeant</TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-zinc-400">CA</TableHead>
+              <TableRow className="border-zinc-800 hover:bg-transparent">
+                <TableHead className="w-24 text-xs font-medium uppercase tracking-wider text-zinc-500">SIREN</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Dénomination</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Activité</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Ville</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Département</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Effectif</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Dirigeant</TableHead>
+                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-zinc-500">CA</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -138,7 +138,7 @@ export function ResultsTable({
                 <TableRow>
                   <TableCell colSpan={8} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-950">
                         <Search className="h-6 w-6 text-indigo-400" />
                       </div>
                       <p className="text-sm text-zinc-500">
@@ -153,43 +153,43 @@ export function ResultsTable({
                 results.map((company) => (
                   <TableRow
                     key={company.siren}
-                    className="cursor-pointer border-zinc-50 transition-colors hover:bg-indigo-50/30"
+                    className="cursor-pointer border-zinc-800/50 transition-colors hover:bg-zinc-800/50"
                     onClick={() => router.push(`/company/${company.siren}`)}
                   >
-                    <TableCell className="font-mono text-xs text-zinc-400">
+                    <TableCell className="font-mono text-xs text-zinc-500">
                       {company.siren}
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate font-semibold text-zinc-900">
+                    <TableCell className="max-w-[200px] truncate font-semibold text-white">
                       {company.denomination || "—"}
                     </TableCell>
-                    <TableCell className="max-w-[180px] truncate text-sm text-zinc-500">
+                    <TableCell className="max-w-[180px] truncate text-sm text-zinc-400">
                       {company.naf_libelle || company.naf_code || "—"}
                     </TableCell>
-                    <TableCell className="text-sm text-zinc-600">
+                    <TableCell className="text-sm text-zinc-400">
                       {company.ville || "—"}
                     </TableCell>
-                    <TableCell className="text-sm text-zinc-600">
+                    <TableCell className="text-sm text-zinc-400">
                       {company.departement_nom || "—"}
                     </TableCell>
                     <TableCell>
                       {company.tranche_effectif ? (
-                        <span className="inline-flex rounded-lg bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                        <span className="inline-flex rounded-lg bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
                           {EFFECTIF_LABELS[company.tranche_effectif] || company.tranche_effectif}
                         </span>
                       ) : (
-                        <span className="text-sm text-zinc-300">—</span>
+                        <span className="text-sm text-zinc-600">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-zinc-600">
+                    <TableCell className="text-sm text-zinc-400">
                       {company.dirigeant_nom
                         ? `${company.dirigeant_prenom || ""} ${company.dirigeant_nom}`.trim()
-                        : <span className="text-zinc-300">—</span>}
+                        : <span className="text-zinc-600">—</span>}
                     </TableCell>
                     <TableCell className="text-right text-sm font-medium">
                       {company.ca_dernier_exercice ? (
-                        <span className="text-emerald-600">{formatCA(company.ca_dernier_exercice)}</span>
+                        <span className="text-emerald-400">{formatCA(company.ca_dernier_exercice)}</span>
                       ) : (
-                        <span className="text-zinc-300">—</span>
+                        <span className="text-zinc-600">—</span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -202,8 +202,8 @@ export function ResultsTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-zinc-100 bg-white px-6 py-3">
-          <span className="text-sm text-zinc-400">
+        <div className="flex items-center justify-between border-t border-zinc-800 bg-zinc-900 px-6 py-3">
+          <span className="text-sm text-zinc-500">
             Page {page} sur {totalPages}
           </span>
           <div className="flex items-center gap-2">
