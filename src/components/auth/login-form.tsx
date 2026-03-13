@@ -22,7 +22,7 @@ export function LoginForm() {
     setLoading(true);
 
     if (!isEmailAllowed(email)) {
-      setError("Accès réservé à l'équipe Alvora. T'es pas sur la liste frérot 😤");
+      setError("Accès réservé à l'équipe Alvora — n'hésite pas à candidater 😉");
       setLoading(false);
       return;
     }
