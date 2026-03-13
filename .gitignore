@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# data files (large CSVs + DB)
+data/raw/
+data/*.db
+__pycache__/
+*.pyc
