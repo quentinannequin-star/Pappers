@@ -1,21 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import type { SearchFilters, SearchResult } from "@/types/database";
 
+const MAX_COUNT = 10000;
+
 export async function searchCompanies(filters: SearchFilters) {
   const supabase = await createClient();
 
-  // Build query directly on companies table (no JOIN with etablissements needed)
+  // Query companies directly — siege address is denormalized, no JOIN needed
   let query = supabase
     .from("companies")
     .select(
-      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement",
-      { count: "exact" }
+      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement",
+      { count: "estimated" }
     )
     .eq("etat_administratif", "A");
 
   // NAF code filter
   if (filters.naf_codes.length > 0) {
     query = query.in("naf_code", filters.naf_codes);
+  }
+
+  // Departement filter (now directly on companies)
+  if (filters.departement_codes.length > 0) {
+    query = query.in("siege_departement", filters.departement_codes);
   }
 
   // Effectif filter
@@ -59,7 +66,7 @@ export async function searchCompanies(filters: SearchFilters) {
     throw error;
   }
 
-  // Now fetch NAF libelles for the results
+  // Fetch NAF libelles for the results
   const nafCodes = [
     ...new Set((data || []).map((c) => c.naf_code).filter(Boolean)),
   ];
@@ -76,16 +83,14 @@ export async function searchCompanies(filters: SearchFilters) {
     }
   }
 
-  // If we have departement filters, we need to check via etablissements
-  // For now, skip dept/region filtering since etablissements aren't loaded
   const results: SearchResult[] = (data || []).map((c) => ({
     siren: c.siren,
     denomination: c.denomination,
     naf_code: c.naf_code,
     naf_libelle: c.naf_code ? nafMap[c.naf_code] || null : null,
-    code_postal: null, // Not available without etablissements
-    ville: null,
-    departement_nom: null,
+    code_postal: c.siege_code_postal,
+    ville: c.siege_ville,
+    departement_nom: c.siege_departement, // departement code for now
     region_nom: null,
     tranche_effectif: c.tranche_effectif,
     categorie_entreprise: c.categorie_entreprise,
@@ -99,9 +104,13 @@ export async function searchCompanies(filters: SearchFilters) {
     date_enrichissement: c.date_enrichissement,
   }));
 
+  // Cap count at MAX_COUNT for performance
+  const total = count !== null ? Math.min(count, MAX_COUNT) : 0;
+
   return {
     results,
-    total: count || 0,
+    total,
+    capped: count !== null && count > MAX_COUNT,
   };
 }
 

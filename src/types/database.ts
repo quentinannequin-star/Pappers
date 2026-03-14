@@ -8,6 +8,11 @@ export interface Company {
   tranche_effectif: string | null;
   categorie_entreprise: string | null;
   etat_administratif: string;
+  // Denormalized siege address
+  siege_code_postal: string | null;
+  siege_ville: string | null;
+  siege_departement: string | null;
+  siege_adresse: string | null;
   dirigeant_nom: string | null;
   dirigeant_prenom: string | null;
   dirigeant_fonction: string | null;

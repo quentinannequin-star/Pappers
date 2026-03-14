@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { isEmailAllowed } from "@/lib/allowed-emails";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,14 @@ export function LoginForm() {
     setError(null);
     setLoading(true);
 
-    if (!isEmailAllowed(email)) {
+    // Server-side email check (whitelist never in client bundle)
+    const checkRes = await fetch("/api/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const { allowed } = await checkRes.json();
+    if (!allowed) {
       setError("Accès réservé à l'équipe Alvora — n'hésite pas à candidater 😉");
       setLoading(false);
       return;

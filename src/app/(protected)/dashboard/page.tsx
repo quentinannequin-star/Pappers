@@ -25,6 +25,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   let results: Awaited<ReturnType<typeof searchCompanies>> = {
     results: [],
     total: 0,
+    capped: false,
   };
 
   if (hasFilters) {

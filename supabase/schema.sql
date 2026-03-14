@@ -1,9 +1,14 @@
 -- ============================================================
--- ALVORA DB — Supabase PostgreSQL Schema
+-- ALVORA DB — Supabase PostgreSQL Schema v2
+-- Denormalized: siege address stored directly in companies
 -- Run this in Supabase SQL Editor (supabase.com > SQL Editor)
 -- ============================================================
 
--- 1. REFERENCE TABLES
+-- 1. EXTENSIONS
+-- ============================================================
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- 2. REFERENCE TABLES
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS ref_naf (
@@ -22,7 +27,7 @@ CREATE TABLE IF NOT EXISTS ref_departements (
     code_region TEXT REFERENCES ref_regions(code)
 );
 
--- 2. MAIN TABLES
+-- 3. MAIN TABLE (denormalized — siege address included)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS companies (
@@ -35,6 +40,11 @@ CREATE TABLE IF NOT EXISTS companies (
     tranche_effectif TEXT,
     categorie_entreprise TEXT,
     etat_administratif TEXT NOT NULL DEFAULT 'A',
+    -- Denormalized siege address (from etablissements CSV)
+    siege_code_postal TEXT,
+    siege_ville TEXT,
+    siege_departement TEXT,
+    siege_adresse TEXT, -- numero + type_voie + libelle_voie
     -- Enrichment columns (NULL until enriched)
     dirigeant_nom TEXT,
     dirigeant_prenom TEXT,
@@ -48,77 +58,77 @@ CREATE TABLE IF NOT EXISTS companies (
     date_chargement TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS etablissements (
-    siret TEXT PRIMARY KEY,
-    siren TEXT REFERENCES companies(siren),
-    nic TEXT,
-    denomination_usuelle TEXT,
-    enseigne TEXT,
-    naf_code TEXT,
-    est_siege BOOLEAN DEFAULT FALSE,
-    numero_voie TEXT,
-    type_voie TEXT,
-    libelle_voie TEXT,
-    code_postal TEXT,
-    commune TEXT,
-    code_commune TEXT,
-    departement TEXT,
-    etat_administratif TEXT NOT NULL DEFAULT 'A',
-    date_creation TEXT,
-    tranche_effectif TEXT,
-    latitude REAL,
-    longitude REAL
-);
-
--- 3. INDEXES
+-- 4. INDEXES (create AFTER bulk load for performance)
 -- ============================================================
+-- DROP these before bulk import, recreate after:
+--   DROP INDEX IF EXISTS idx_companies_naf;
+--   DROP INDEX IF EXISTS idx_companies_effectif;
+--   DROP INDEX IF EXISTS idx_companies_denomination_trgm;
+--   DROP INDEX IF EXISTS idx_companies_dept;
 
 CREATE INDEX IF NOT EXISTS idx_companies_naf ON companies(naf_code);
 CREATE INDEX IF NOT EXISTS idx_companies_etat ON companies(etat_administratif);
 CREATE INDEX IF NOT EXISTS idx_companies_effectif ON companies(tranche_effectif);
 CREATE INDEX IF NOT EXISTS idx_companies_categorie ON companies(categorie_entreprise);
-CREATE INDEX IF NOT EXISTS idx_companies_denomination ON companies(denomination);
--- trigram index for text search on denomination
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_companies_dept ON companies(siege_departement);
 CREATE INDEX IF NOT EXISTS idx_companies_denomination_trgm ON companies USING gin(denomination gin_trgm_ops);
 
-CREATE INDEX IF NOT EXISTS idx_etab_siren ON etablissements(siren);
-CREATE INDEX IF NOT EXISTS idx_etab_naf ON etablissements(naf_code);
-CREATE INDEX IF NOT EXISTS idx_etab_dept ON etablissements(departement);
-CREATE INDEX IF NOT EXISTS idx_etab_cp ON etablissements(code_postal);
-CREATE INDEX IF NOT EXISTS idx_etab_siege ON etablissements(est_siege);
-CREATE INDEX IF NOT EXISTS idx_etab_etat ON etablissements(etat_administratif);
-CREATE INDEX IF NOT EXISTS idx_etab_commune ON etablissements(commune);
-CREATE INDEX IF NOT EXISTS idx_etab_filter ON etablissements(etat_administratif, naf_code, departement);
-
--- 4. ROW LEVEL SECURITY
+-- 5. ROW LEVEL SECURITY
 -- ============================================================
 
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE etablissements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ref_naf ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ref_regions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ref_departements ENABLE ROW LEVEL SECURITY;
 
 -- Authenticated users can read all data
-CREATE POLICY "Authenticated users can read companies"
-    ON companies FOR SELECT TO authenticated USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can read companies"
+        ON companies FOR SELECT TO authenticated USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Authenticated users can read etablissements"
-    ON etablissements FOR SELECT TO authenticated USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can read ref_naf"
+        ON ref_naf FOR SELECT TO authenticated USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Authenticated users can read ref_naf"
-    ON ref_naf FOR SELECT TO authenticated USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can read ref_regions"
+        ON ref_regions FOR SELECT TO authenticated USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Authenticated users can read ref_regions"
-    ON ref_regions FOR SELECT TO authenticated USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can read ref_departements"
+        ON ref_departements FOR SELECT TO authenticated USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Authenticated users can read ref_departements"
-    ON ref_departements FOR SELECT TO authenticated USING (true);
-
--- 5. RPC FUNCTIONS (called from Next.js)
+-- 6. ALLOWED EMAILS TABLE (server-side whitelist)
 -- ============================================================
 
+CREATE TABLE IF NOT EXISTS allowed_emails (
+    email TEXT PRIMARY KEY
+);
+
+ALTER TABLE allowed_emails ENABLE ROW LEVEL SECURITY;
+
+-- Only service_role can read (not exposed to client)
+-- No RLS policy for authenticated = no access from client
+
+INSERT INTO allowed_emails (email) VALUES
+    ('qannequin@alvora-partners.com'),
+    ('pajouzel@alvora-partners.com'),
+    ('hjanoir@alvora-partners.com'),
+    ('quentinannequin@berkeley.edu')
+ON CONFLICT (email) DO NOTHING;
+
+-- 7. RPC FUNCTIONS
+-- ============================================================
+
+-- search_companies: NO JOIN — everything in companies table
 CREATE OR REPLACE FUNCTION search_companies(
     p_naf_codes TEXT[] DEFAULT NULL,
     p_dept_codes TEXT[] DEFAULT NULL,
@@ -137,8 +147,7 @@ RETURNS TABLE (
     naf_libelle TEXT,
     code_postal TEXT,
     ville TEXT,
-    departement_nom TEXT,
-    region_nom TEXT,
+    departement TEXT,
     tranche_effectif TEXT,
     categorie_entreprise TEXT,
     forme_juridique TEXT,
@@ -160,10 +169,9 @@ BEGIN
         c.denomination,
         c.naf_code,
         n.libelle AS naf_libelle,
-        e.code_postal,
-        e.commune AS ville,
-        d.nom AS departement_nom,
-        r.nom AS region_nom,
+        c.siege_code_postal AS code_postal,
+        c.siege_ville AS ville,
+        c.siege_departement AS departement,
         c.tranche_effectif,
         c.categorie_entreprise,
         c.forme_juridique,
@@ -175,14 +183,10 @@ BEGIN
         c.resultat_net,
         c.date_enrichissement
     FROM companies c
-    JOIN etablissements e ON c.siren = e.siren AND e.est_siege = TRUE
     LEFT JOIN ref_naf n ON c.naf_code = n.code
-    LEFT JOIN ref_departements d ON e.departement = d.code
-    LEFT JOIN ref_regions r ON d.code_region = r.code
     WHERE c.etat_administratif = 'A'
-      AND e.etat_administratif = 'A'
       AND (p_naf_codes IS NULL OR c.naf_code = ANY(p_naf_codes))
-      AND (p_dept_codes IS NULL OR e.departement = ANY(p_dept_codes))
+      AND (p_dept_codes IS NULL OR c.siege_departement = ANY(p_dept_codes))
       AND (p_effectif_min IS NULL OR c.tranche_effectif >= p_effectif_min)
       AND (p_effectif_max IS NULL OR c.tranche_effectif <= p_effectif_max)
       AND (c.tranche_effectif IS NULL OR c.tranche_effectif != 'NN')
@@ -195,6 +199,7 @@ BEGIN
 END;
 $$;
 
+-- count_companies: capped at 10001 for performance
 CREATE OR REPLACE FUNCTION count_companies(
     p_naf_codes TEXT[] DEFAULT NULL,
     p_dept_codes TEXT[] DEFAULT NULL,
@@ -213,18 +218,20 @@ DECLARE
 BEGIN
     SELECT COUNT(*)
     INTO result
-    FROM companies c
-    JOIN etablissements e ON c.siren = e.siren AND e.est_siege = TRUE
-    WHERE c.etat_administratif = 'A'
-      AND e.etat_administratif = 'A'
-      AND (p_naf_codes IS NULL OR c.naf_code = ANY(p_naf_codes))
-      AND (p_dept_codes IS NULL OR e.departement = ANY(p_dept_codes))
-      AND (p_effectif_min IS NULL OR c.tranche_effectif >= p_effectif_min)
-      AND (p_effectif_max IS NULL OR c.tranche_effectif <= p_effectif_max)
-      AND (c.tranche_effectif IS NULL OR c.tranche_effectif != 'NN')
-      AND (p_min_age IS NULL OR c.date_creation <= to_char(CURRENT_DATE - (p_min_age || ' years')::INTERVAL, 'YYYY-MM-DD'))
-      AND (p_denomination IS NULL OR c.denomination ILIKE '%' || p_denomination || '%')
-      AND (p_formes IS NULL OR c.forme_juridique = ANY(p_formes));
+    FROM (
+        SELECT 1
+        FROM companies c
+        WHERE c.etat_administratif = 'A'
+          AND (p_naf_codes IS NULL OR c.naf_code = ANY(p_naf_codes))
+          AND (p_dept_codes IS NULL OR c.siege_departement = ANY(p_dept_codes))
+          AND (p_effectif_min IS NULL OR c.tranche_effectif >= p_effectif_min)
+          AND (p_effectif_max IS NULL OR c.tranche_effectif <= p_effectif_max)
+          AND (c.tranche_effectif IS NULL OR c.tranche_effectif != 'NN')
+          AND (p_min_age IS NULL OR c.date_creation <= to_char(CURRENT_DATE - (p_min_age || ' years')::INTERVAL, 'YYYY-MM-DD'))
+          AND (p_denomination IS NULL OR c.denomination ILIKE '%' || p_denomination || '%')
+          AND (p_formes IS NULL OR c.forme_juridique = ANY(p_formes))
+        LIMIT 10001
+    ) sub;
 
     RETURN result;
 END;
