@@ -173,7 +173,7 @@ export function FiltersSidebar({
         className="fixed inset-0 z-30 bg-black/50 lg:hidden"
         onClick={onToggle}
       />
-      <div className="fixed left-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] w-80 flex-col border-r border-zinc-800 bg-zinc-900 shadow-2xl lg:relative lg:top-0 lg:z-auto lg:shadow-none">
+      <div className="fixed left-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] w-80 flex-col border-r border-zinc-800 bg-zinc-950 shadow-2xl lg:relative lg:top-0 lg:z-auto lg:shadow-none">
         <div className="flex items-center justify-between p-5 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-950">
