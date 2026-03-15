@@ -25,11 +25,11 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.in("siege_departement", filters.departement_codes);
   }
 
-  // Effectif filter
-  if (filters.effectif_min) {
+  // Effectif filter — only apply if user explicitly changed from defaults
+  if (filters.effectif_min && filters.effectif_min !== "00") {
     query = query.gte("tranche_effectif", filters.effectif_min);
   }
-  if (filters.effectif_max) {
+  if (filters.effectif_max && filters.effectif_max !== "53") {
     query = query.lte("tranche_effectif", filters.effectif_max);
   }
 

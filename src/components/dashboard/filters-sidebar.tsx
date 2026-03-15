@@ -37,10 +37,10 @@ export function FiltersSidebar({
     searchParams.get("depts")?.split(",").filter(Boolean) || []
   );
   const [effectifMin, setEffectifMin] = useState(
-    searchParams.get("eff_min") || "03"
+    searchParams.get("eff_min") || "00"
   );
   const [effectifMax, setEffectifMax] = useState(
-    searchParams.get("eff_max") || "42"
+    searchParams.get("eff_max") || "53"
   );
   const [denomination, setDenomination] = useState(
     searchParams.get("q") || ""
