@@ -96,6 +96,36 @@ export interface SearchResult {
   date_enrichissement: string | null;
 }
 
+export const FORME_JURIDIQUE_LABELS: Record<string, string> = {
+  "1000": "Entrepreneur individuel",
+  "2110": "Indivision",
+  "2210": "Société créée de fait",
+  "2900": "Autre groupement de droit privé",
+  "3120": "SARL unipersonnelle (EARL)",
+  "3220": "SARL d'exercice libéral",
+  "5202": "SA coopérative",
+  "5485": "SA à directoire",
+  "5499": "SA à conseil d'administration",
+  "5599": "SA à participation ouvrière",
+  "5710": "SAS",
+  "5720": "SASU",
+  "6316": "SARL de famille",
+  "6533": "SARL coopérative artisanale",
+  "6534": "SARL coopérative agricole",
+  "6540": "SARL",
+  "6541": "SARL unipersonnelle (EURL)",
+  "6589": "SARL d'aménagement foncier",
+  "6597": "SARL commerciale",
+  "6598": "SARL libérale",
+  "6599": "SARL (autre)",
+  "7210": "Commune et commune nouvelle",
+  "7361": "Communauté de communes",
+  "9110": "Syndicat de propriétaires",
+  "9220": "Association déclarée",
+  "9221": "Association déclarée d'insertion",
+  "9260": "Association de droit local",
+};
+
 export const EFFECTIF_LABELS: Record<string, string> = {
   "00": "0 salarié",
   "01": "1-2",

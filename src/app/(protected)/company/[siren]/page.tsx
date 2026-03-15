@@ -1,11 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { EFFECTIF_LABELS } from "@/types/database";
+import { EFFECTIF_LABELS, FORME_JURIDIQUE_LABELS } from "@/types/database";
 import { notFound } from "next/navigation";
+import { BackButton } from "./back-button";
 
 interface CompanyPageProps {
   params: Promise<{ siren: string }>;
@@ -23,12 +22,6 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
 
   if (!company) notFound();
 
-  const { data: etablissements } = await supabase
-    .from("etablissements")
-    .select("*")
-    .eq("siren", siren)
-    .order("est_siege", { ascending: false });
-
   const { data: naf } = await supabase
     .from("ref_naf")
     .select("libelle")
@@ -44,12 +37,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <Link href="/dashboard">
-        <Button variant="ghost" size="sm" className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour aux résultats
-        </Button>
-      </Link>
+      <BackButton />
 
       <div className="space-y-6">
         {/* Company header */}
@@ -91,7 +79,11 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
               <InfoItem label="Catégorie" value={company.categorie_entreprise} />
               <InfoItem
                 label="Forme juridique"
-                value={company.forme_juridique}
+                value={
+                  company.forme_juridique
+                    ? FORME_JURIDIQUE_LABELS[company.forme_juridique] || company.forme_juridique
+                    : null
+                }
               />
               <InfoItem label="Date de création" value={company.date_creation} />
               <InfoItem
@@ -158,49 +150,19 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
           </div>
         )}
 
-        {/* Etablissements */}
-        {etablissements && etablissements.length > 0 && (
+        {/* Adresse siège */}
+        {company.siege_adresse && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                Établissements ({etablissements.length})
-              </CardTitle>
+              <CardTitle className="text-lg">Siège social</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {etablissements.map((etab) => (
-                  <div
-                    key={etab.siret}
-                    className="flex items-start justify-between rounded-lg border border-zinc-800 p-3"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-zinc-400">
-                          {etab.siret}
-                        </span>
-                        {etab.est_siege && (
-                          <Badge variant="outline" className="text-xs">
-                            Siège
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm">
-                        {[etab.numero_voie, etab.type_voie, etab.libelle_voie]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </p>
-                      <p className="text-sm text-zinc-400">
-                        {etab.code_postal} {etab.commune}
-                      </p>
-                    </div>
-                    {etab.enseigne && (
-                      <span className="text-sm text-zinc-400">
-                        {etab.enseigne}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm">
+                {company.siege_adresse}
+              </p>
+              <p className="text-sm text-zinc-400">
+                {company.siege_code_postal} {company.siege_ville}
+              </p>
             </CardContent>
           </Card>
         )}
