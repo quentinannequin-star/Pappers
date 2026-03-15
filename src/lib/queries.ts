@@ -62,13 +62,11 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.in("forme_juridique", filters.formes);
   }
 
-  // Pagination
-  query = query
-    .order("denomination", { ascending: true, nullsFirst: false })
-    .range(
-      (filters.page - 1) * filters.per_page,
-      filters.page * filters.per_page - 1
-    );
+  // Pagination — no ORDER BY to avoid full-table sort timeout on 16M rows
+  query = query.range(
+    (filters.page - 1) * filters.per_page,
+    filters.page * filters.per_page - 1
+  );
 
   const { data, error, count } = await query;
 
