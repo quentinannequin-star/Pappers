@@ -6,13 +6,11 @@ const MAX_COUNT = 10000;
 export async function searchCompanies(filters: SearchFilters) {
   const supabase = await createClient();
 
-  // Use count: "exact" — the previous timeout was caused by ORDER BY (removed), not COUNT.
-  // With proper indexes on naf_code, siege_departement, etc., COUNT is fast.
+  // Data query — no count here, count is done separately with bounded scan
   let query = supabase
     .from("companies")
     .select(
-      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement",
-      { count: "exact" }
+      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement"
     )
     .eq("etat_administratif", "A");
 
@@ -68,19 +66,47 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.in("forme_juridique", filters.formes);
   }
 
-  // Strict limit: max 500 rows per page request to keep queries fast
+  // Bounded count query — same filters, but only scans up to 1001 rows
+  // head: true = no data returned, just count in response header
+  // limit(1001) = Postgres stops scanning after 1001 matches → guaranteed fast
+  const BOUNDED_LIMIT = 1001;
+  let countQuery = supabase
+    .from("companies")
+    .select("siren", { count: "exact", head: true })
+    .eq("etat_administratif", "A")
+    .limit(BOUNDED_LIMIT);
+
+  // Apply same filters to count query
+  if (filters.naf_codes.length > 0) countQuery = countQuery.in("naf_code", filters.naf_codes);
+  if (deptFilter.length > 0) countQuery = countQuery.in("siege_departement", deptFilter);
+  if (filters.effectif_min && filters.effectif_min !== "00") countQuery = countQuery.gte("tranche_effectif", filters.effectif_min);
+  if (filters.effectif_max && filters.effectif_max !== "53") countQuery = countQuery.lte("tranche_effectif", filters.effectif_max);
+  if (filters.exclude_ei) countQuery = countQuery.neq("forme_juridique", "1000");
+  if (filters.denomination) countQuery = countQuery.ilike("denomination", `%${filters.denomination}%`);
+  if (filters.min_age > 0) {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - filters.min_age);
+    countQuery = countQuery.lte("date_creation", cutoff.toISOString().split("T")[0]);
+  }
+  if (filters.formes.length > 0) countQuery = countQuery.in("forme_juridique", filters.formes);
+
+  // Data query — paginated
   const limit = Math.min(filters.per_page, 500);
   query = query.range(
     (filters.page - 1) * limit,
     filters.page * limit - 1
   );
 
-  const { data, error, count } = await query;
+  // Run both in parallel
+  const [dataResult, countResult] = await Promise.all([query, countQuery]);
 
-  if (error) {
-    console.error("Search error:", error);
-    throw error;
+  if (dataResult.error) {
+    console.error("Search error:", dataResult.error);
+    throw dataResult.error;
   }
+
+  const data = dataResult.data;
+  const boundedCount = countResult.count ?? 0;
 
   // Fetch NAF libelles for the results
   const nafCodes = [
@@ -120,13 +146,14 @@ export async function searchCompanies(filters: SearchFilters) {
     date_enrichissement: c.date_enrichissement,
   }));
 
-  // Cap count at MAX_COUNT for display
-  const total = count !== null ? Math.min(count, MAX_COUNT) : (data || []).length;
+  // Bounded count: if we hit 1001, display "1 000+"
+  const isCapped = boundedCount >= BOUNDED_LIMIT;
+  const total = isCapped ? 1000 : boundedCount;
 
   return {
     results,
     total,
-    capped: count !== null && count > MAX_COUNT,
+    capped: isCapped,
   };
 }
 

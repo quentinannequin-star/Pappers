@@ -90,7 +90,7 @@ export function ResultsTable({
           )}
           <div className="rounded-2xl bg-indigo-950 px-5 py-2.5">
             <span className="text-3xl font-bold text-indigo-400">
-              {capped ? "10 000+" : total.toLocaleString("fr-FR")}
+              {capped ? "1 000+" : total.toLocaleString("fr-FR")}
             </span>
             <span className="ml-2 text-sm font-medium text-indigo-500">sociétés</span>
           </div>
