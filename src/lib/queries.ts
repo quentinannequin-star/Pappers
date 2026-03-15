@@ -6,12 +6,13 @@ const MAX_COUNT = 10000;
 export async function searchCompanies(filters: SearchFilters) {
   const supabase = await createClient();
 
-  // Build the base query WITHOUT count — count is done separately to avoid timeout
-  // on complex multi-filter queries (6 NAF codes + dept can exceed PostgREST 8s limit)
+  // Use count: "planned" — uses Postgres EXPLAIN estimate, fast even on 16M rows
+  // (The old timeout was caused by ORDER BY, not count. ORDER BY is removed.)
   let query = supabase
     .from("companies")
     .select(
-      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement"
+      "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement",
+      { count: "planned" }
     )
     .eq("etat_administratif", "A");
 
@@ -74,19 +75,12 @@ export async function searchCompanies(filters: SearchFilters) {
     filters.page * limit - 1
   );
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("Search error:", error);
     throw error;
   }
-
-  // Estimate count from results: if we got a full page, there are likely more
-  // This avoids the expensive COUNT query that causes timeouts on Nano compute
-  const pageCount = (data || []).length;
-  const estimatedTotal = pageCount < limit
-    ? (filters.page - 1) * limit + pageCount  // Last page — exact count
-    : Math.max(filters.page * limit + 1, MAX_COUNT); // More pages — show capped
 
   // Fetch NAF libelles for the results
   const nafCodes = [
@@ -126,13 +120,13 @@ export async function searchCompanies(filters: SearchFilters) {
     date_enrichissement: c.date_enrichissement,
   }));
 
-  // Use estimated total (no COUNT query = no timeout risk)
-  const total = Math.min(estimatedTotal, MAX_COUNT);
+  // Cap count at MAX_COUNT for display
+  const total = count !== null ? Math.min(count, MAX_COUNT) : (data || []).length;
 
   return {
     results,
     total,
-    capped: estimatedTotal >= MAX_COUNT,
+    capped: count !== null && count > MAX_COUNT,
   };
 }
 
