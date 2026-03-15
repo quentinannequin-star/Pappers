@@ -61,6 +61,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <ResultsTable
         results={results.results}
         total={results.total}
+        capped={results.capped}
         page={page}
         perPage={perPage}
       />

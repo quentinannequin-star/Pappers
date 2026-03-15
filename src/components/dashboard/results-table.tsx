@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ChevronLeft, ChevronRight, Sparkles, Search, Loader2 } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
 import type { SearchResult } from "@/types/database";
 import { EFFECTIF_LABELS } from "@/types/database";
 import { useState } from "react";
@@ -19,6 +18,7 @@ import { useState } from "react";
 interface ResultsTableProps {
   results: SearchResult[];
   total: number;
+  capped: boolean;
   page: number;
   perPage: number;
 }
@@ -26,18 +26,15 @@ interface ResultsTableProps {
 export function ResultsTable({
   results,
   total,
+  capped,
   page,
   perPage,
 }: ResultsTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [enriching, setEnriching] = useState(false);
-  const [enrichError, setEnrichError] = useState<string | null>(null);
-  const [enrichSuccess, setEnrichSuccess] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const totalPages = Math.ceil(total / perPage);
-  const enrichedCount = results.filter((r) => r.date_enrichissement).length;
 
   function goToPage(newPage: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -71,87 +68,19 @@ export function ResultsTable({
     }
   }
 
-  async function handleEnrich() {
-    setEnriching(true);
-    setEnrichError(null);
-    try {
-      const sirens = results
-        .filter((r) => !r.date_enrichissement)
-        .map((r) => r.siren);
-
-      if (sirens.length === 0) {
-        setEnrichError("Toutes les entreprises sont déjà enrichies.");
-        return;
-      }
-
-      const response = await fetch("/api/enrich", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sirens: sirens.slice(0, 50) }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        setEnrichError(`Erreur ${response.status}: ${errData.error || "Échec de l'enrichissement"}`);
-        return;
-      }
-
-      const data = await response.json();
-      setEnrichError(null);
-      // Show success feedback then refresh
-      setEnrichSuccess(`${data.enriched}/${data.total} entreprises enrichies`);
-      router.refresh();
-    } catch (err) {
-      console.error("Enrich error:", err);
-      setEnrichError("Erreur réseau lors de l'enrichissement.");
-    } finally {
-      setEnriching(false);
-    }
-  }
-
-  function formatCA(ca: number | null) {
-    if (ca == null) return "—";
-    if (ca >= 1_000_000) return `${(ca / 1_000_000).toFixed(1)}M€`;
-    if (ca >= 1_000) return `${(ca / 1_000).toFixed(0)}k€`;
-    return `${ca}€`;
-  }
-
   return (
     <div className="flex flex-1 flex-col bg-zinc-950">
       {/* Header bar */}
       <div className="flex items-center justify-between bg-zinc-900 px-6 py-4">
         <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-indigo-950 px-5 py-2.5">
-            <span className="text-3xl font-bold text-indigo-400">{total.toLocaleString("fr-FR")}</span>
+            <span className="text-3xl font-bold text-indigo-400">
+              {capped ? "10 000+" : total.toLocaleString("fr-FR")}
+            </span>
             <span className="ml-2 text-sm font-medium text-indigo-500">sociétés</span>
           </div>
-          {enrichedCount > 0 && (
-            <Badge className="rounded-lg bg-emerald-950 text-emerald-400">
-              {enrichedCount} enrichie{enrichedCount > 1 ? "s" : ""}
-            </Badge>
-          )}
-          {enrichError && (
-            <span className="text-xs text-red-400">{enrichError}</span>
-          )}
-          {enrichSuccess && !enrichError && (
-            <span className="text-xs text-emerald-400">{enrichSuccess}</span>
-          )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEnrich}
-            disabled={enriching || results.length === 0}
-            className="rounded-xl border-indigo-800 text-indigo-400 hover:bg-indigo-950"
-          >
-            {enriching ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            {enriching ? "Enrichissement..." : "Enrichir"}
-          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -181,14 +110,13 @@ export function ResultsTable({
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Ville</TableHead>
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Département</TableHead>
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Effectif</TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Dirigeant</TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-zinc-500">CA</TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-zinc-500">Forme juridique</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {results.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-20 text-center">
+                  <TableCell colSpan={7} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-950">
                         <Search className="h-6 w-6 text-indigo-400" />
@@ -233,16 +161,7 @@ export function ResultsTable({
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-zinc-400">
-                      {company.dirigeant_nom
-                        ? `${company.dirigeant_prenom || ""} ${company.dirigeant_nom}`.trim()
-                        : <span className="text-zinc-600">—</span>}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium">
-                      {company.ca_dernier_exercice ? (
-                        <span className="text-emerald-400">{formatCA(company.ca_dernier_exercice)}</span>
-                      ) : (
-                        <span className="text-zinc-600">—</span>
-                      )}
+                      {company.forme_juridique || "—"}
                     </TableCell>
                   </TableRow>
                 ))
