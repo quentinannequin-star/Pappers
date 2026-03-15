@@ -6,13 +6,13 @@ const MAX_COUNT = 10000;
 export async function searchCompanies(filters: SearchFilters) {
   const supabase = await createClient();
 
-  // Use count: "planned" — uses Postgres EXPLAIN estimate, fast even on 16M rows
-  // (The old timeout was caused by ORDER BY, not count. ORDER BY is removed.)
+  // Use count: "exact" — the previous timeout was caused by ORDER BY (removed), not COUNT.
+  // With proper indexes on naf_code, siege_departement, etc., COUNT is fast.
   let query = supabase
     .from("companies")
     .select(
       "siren, denomination, naf_code, tranche_effectif, categorie_entreprise, forme_juridique, date_creation, siege_code_postal, siege_ville, siege_departement, siege_adresse, dirigeant_nom, dirigeant_prenom, dirigeant_fonction, ca_dernier_exercice, resultat_net, date_enrichissement",
-      { count: "planned" }
+      { count: "exact" }
     )
     .eq("etat_administratif", "A");
 
