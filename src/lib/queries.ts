@@ -66,13 +66,13 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.in("forme_juridique", filters.formes);
   }
 
-  // Bounded count query — same filters, but only scans up to 1001 rows
-  // head: true = no data returned, just count in response header
-  // limit(1001) = Postgres stops scanning after 1001 matches → guaranteed fast
+  // Bounded count: select siren only, limit 1001, NO count header.
+  // Postgres physically stops the index scan at row 1001 → guaranteed < 1s.
+  // We use data.length in JS to get the count.
   const BOUNDED_LIMIT = 1001;
   let countQuery = supabase
     .from("companies")
-    .select("siren", { count: "exact", head: true })
+    .select("siren")
     .eq("etat_administratif", "A")
     .limit(BOUNDED_LIMIT);
 
@@ -106,7 +106,7 @@ export async function searchCompanies(filters: SearchFilters) {
   }
 
   const data = dataResult.data;
-  const boundedCount = countResult.count ?? 0;
+  const boundedCount = (countResult.data || []).length;
 
   // Fetch NAF libelles for the results
   const nafCodes = [
