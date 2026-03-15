@@ -20,9 +20,20 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.in("naf_code", filters.naf_codes);
   }
 
-  // Departement filter (now directly on companies)
-  if (filters.departement_codes.length > 0) {
-    query = query.in("siege_departement", filters.departement_codes);
+  // Region → departement resolution + departement filter
+  let deptFilter = [...filters.departement_codes];
+  if (filters.region_codes.length > 0 && deptFilter.length === 0) {
+    // Resolve region codes to department codes
+    const { data: regionDepts } = await supabase
+      .from("ref_departements")
+      .select("code")
+      .in("code_region", filters.region_codes);
+    if (regionDepts) {
+      deptFilter = regionDepts.map((d) => d.code);
+    }
+  }
+  if (deptFilter.length > 0) {
+    query = query.in("siege_departement", deptFilter);
   }
 
   // Effectif filter — only apply if user explicitly changed from defaults
