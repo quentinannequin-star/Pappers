@@ -75,7 +75,7 @@ export function ResultsTable({
   return (
     <div className="flex flex-1 flex-col bg-zinc-950">
       {/* Header bar */}
-      <div className="flex items-center justify-between bg-zinc-900 px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
           {onToggleFilters && (
             <Button
