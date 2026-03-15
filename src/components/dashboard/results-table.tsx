@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Search, Loader2, SlidersHorizontal } from "lucide-react";
 import type { SearchResult } from "@/types/database";
 import { EFFECTIF_LABELS } from "@/types/database";
 import { useState } from "react";
@@ -21,6 +21,8 @@ interface ResultsTableProps {
   capped: boolean;
   page: number;
   perPage: number;
+  onToggleFilters?: () => void;
+  filtersOpen?: boolean;
 }
 
 export function ResultsTable({
@@ -29,6 +31,8 @@ export function ResultsTable({
   capped,
   page,
   perPage,
+  onToggleFilters,
+  filtersOpen,
 }: ResultsTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,7 +76,18 @@ export function ResultsTable({
     <div className="flex flex-1 flex-col bg-zinc-950">
       {/* Header bar */}
       <div className="flex items-center justify-between bg-zinc-900 px-6 py-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {onToggleFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleFilters}
+              className={`rounded-xl ${filtersOpen ? "border-indigo-700 bg-indigo-950 text-indigo-400" : ""}`}
+            >
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filtres
+            </Button>
+          )}
           <div className="rounded-2xl bg-indigo-950 px-5 py-2.5">
             <span className="text-3xl font-bold text-indigo-400">
               {capped ? "10 000+" : total.toLocaleString("fr-FR")}

@@ -1,8 +1,5 @@
-import { Suspense } from "react";
-import { FiltersSidebar } from "@/components/dashboard/filters-sidebar";
-import { ResultsTable } from "@/components/dashboard/results-table";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { searchCompanies, getRefNaf, getRefRegions, getRefDepartements } from "@/lib/queries";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardPageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
@@ -45,26 +42,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       });
     } catch (err) {
       console.error("Search failed:", err);
-      // Return empty results instead of crashing the page
     }
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
-      <Suspense fallback={<div className="w-80 animate-pulse bg-zinc-800" />}>
-        <FiltersSidebar
-          nafCodes={nafCodes}
-          regions={regions}
-          departements={departements}
-        />
-      </Suspense>
-      <ResultsTable
-        results={results.results}
-        total={results.total}
-        capped={results.capped}
-        page={page}
-        perPage={perPage}
-      />
-    </div>
+    <DashboardLayout
+      nafCodes={nafCodes}
+      regions={regions}
+      departements={departements}
+      results={results.results}
+      total={results.total}
+      capped={results.capped}
+      page={page}
+      perPage={perPage}
+    />
   );
 }

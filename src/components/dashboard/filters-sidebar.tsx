@@ -15,6 +15,8 @@ interface FiltersSidebarProps {
   nafCodes: RefNaf[];
   regions: RefRegion[];
   departements: RefDepartement[];
+  open: boolean;
+  onToggle: () => void;
 }
 
 function CollapsibleSection({
@@ -58,6 +60,8 @@ export function FiltersSidebar({
   nafCodes,
   regions,
   departements,
+  open,
+  onToggle,
 }: FiltersSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -160,19 +164,32 @@ export function FiltersSidebar({
 
   const effectifOptions = Object.entries(EFFECTIF_LABELS);
 
+  if (!open) return null;
+
   return (
-    <div className="flex h-full w-80 flex-col border-r border-zinc-800 bg-zinc-900">
-      <div className="flex items-center justify-between p-5 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-950">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-400" />
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+        onClick={onToggle}
+      />
+      <div className="fixed left-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] w-80 flex-col border-r border-zinc-800 bg-zinc-900 shadow-2xl lg:relative lg:top-0 lg:z-auto lg:shadow-none">
+        <div className="flex items-center justify-between p-5 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-950">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-400" />
+            </div>
+            <h2 className="font-semibold text-white">Filtres</h2>
           </div>
-          <h2 className="font-semibold text-white">Filtres</h2>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-zinc-500 hover:text-zinc-300">
+              Réinitialiser
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onToggle} className="text-zinc-500 hover:text-zinc-300">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-zinc-500 hover:text-zinc-300">
-          Réinitialiser
-        </Button>
-      </div>
 
       <ScrollArea className="flex-1 px-5">
         <div className="space-y-3 pb-4">
@@ -379,11 +396,12 @@ export function FiltersSidebar({
       </ScrollArea>
 
       <div className="border-t border-zinc-800 p-5">
-        <Button onClick={handleSearch} className="h-11 w-full rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">
+        <Button onClick={() => { handleSearch(); onToggle(); }} className="h-11 w-full rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">
           <Search className="mr-2 h-4 w-4" />
           Rechercher
         </Button>
       </div>
     </div>
+    </>
   );
 }
