@@ -32,6 +32,8 @@ export function ResultsTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [enriching, setEnriching] = useState(false);
+  const [enrichError, setEnrichError] = useState<string | null>(null);
+  const [enrichSuccess, setEnrichSuccess] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const totalPages = Math.ceil(total / perPage);
@@ -71,12 +73,16 @@ export function ResultsTable({
 
   async function handleEnrich() {
     setEnriching(true);
+    setEnrichError(null);
     try {
       const sirens = results
         .filter((r) => !r.date_enrichissement)
         .map((r) => r.siren);
 
-      if (sirens.length === 0) return;
+      if (sirens.length === 0) {
+        setEnrichError("Toutes les entreprises sont déjà enrichies.");
+        return;
+      }
 
       const response = await fetch("/api/enrich", {
         method: "POST",
@@ -84,9 +90,20 @@ export function ResultsTable({
         body: JSON.stringify({ sirens: sirens.slice(0, 50) }),
       });
 
-      if (response.ok) {
-        router.refresh();
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        setEnrichError(`Erreur ${response.status}: ${errData.error || "Échec de l'enrichissement"}`);
+        return;
       }
+
+      const data = await response.json();
+      setEnrichError(null);
+      // Show success feedback then refresh
+      setEnrichSuccess(`${data.enriched}/${data.total} entreprises enrichies`);
+      router.refresh();
+    } catch (err) {
+      console.error("Enrich error:", err);
+      setEnrichError("Erreur réseau lors de l'enrichissement.");
     } finally {
       setEnriching(false);
     }
@@ -113,6 +130,12 @@ export function ResultsTable({
               {enrichedCount} enrichie{enrichedCount > 1 ? "s" : ""}
             </Badge>
           )}
+          {enrichError && (
+            <span className="text-xs text-red-400">{enrichError}</span>
+          )}
+          {enrichSuccess && !enrichError && (
+            <span className="text-xs text-emerald-400">{enrichSuccess}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -122,7 +145,11 @@ export function ResultsTable({
             disabled={enriching || results.length === 0}
             className="rounded-xl border-indigo-800 text-indigo-400 hover:bg-indigo-950"
           >
-            <Sparkles className="mr-2 h-4 w-4" />
+            {enriching ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
             {enriching ? "Enrichissement..." : "Enrichir"}
           </Button>
           <Button

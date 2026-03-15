@@ -29,19 +29,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   };
 
   if (hasFilters) {
-    results = await searchCompanies({
-      naf_codes: params.naf?.split(",").filter(Boolean) || [],
-      region_codes: params.regions?.split(",").filter(Boolean) || [],
-      departement_codes: params.depts?.split(",").filter(Boolean) || [],
-      effectif_min: params.eff_min || "",
-      effectif_max: params.eff_max || "",
-      formes: params.formes?.split(",").filter(Boolean) || [],
-      exclude_ei: params.no_ei === "1",
-      min_age: parseInt(params.age || "0"),
-      denomination: params.q || "",
-      page,
-      per_page: perPage,
-    });
+    try {
+      results = await searchCompanies({
+        naf_codes: params.naf?.split(",").filter(Boolean) || [],
+        region_codes: params.regions?.split(",").filter(Boolean) || [],
+        departement_codes: params.depts?.split(",").filter(Boolean) || [],
+        effectif_min: params.eff_min || "",
+        effectif_max: params.eff_max || "",
+        formes: params.formes?.split(",").filter(Boolean) || [],
+        exclude_ei: params.no_ei === "1",
+        min_age: parseInt(params.age || "0"),
+        denomination: params.q || "",
+        page,
+        per_page: perPage,
+      });
+    } catch (err) {
+      console.error("Search failed:", err);
+      // Return empty results instead of crashing the page
+    }
   }
 
   return (
