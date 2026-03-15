@@ -69,6 +69,7 @@ export interface SearchFilters {
   effectif_min: string;
   effectif_max: string;
   formes: string[];
+  exclude_ei: boolean;
   min_age: number;
   denomination: string;
   page: number;

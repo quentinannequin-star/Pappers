@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import type { RefNaf, RefDepartement, RefRegion } from "@/types/database";
 import { EFFECTIF_LABELS } from "@/types/database";
 
@@ -16,6 +15,43 @@ interface FiltersSidebarProps {
   nafCodes: RefNaf[];
   regions: RefRegion[];
   departements: RefDepartement[];
+}
+
+function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-b border-zinc-800 pb-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between py-1"
+      >
+        <Label className="pointer-events-none text-xs font-medium uppercase tracking-wider text-zinc-500">
+          {title}
+        </Label>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-zinc-500 transition-transform duration-200 ${
+            open ? "rotate-0" : "-rotate-90"
+          }`}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-200 ${
+          open ? "mt-2 max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function FiltersSidebar({
@@ -26,7 +62,6 @@ export function FiltersSidebar({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Parse initial state from URL
   const [selectedNaf, setSelectedNaf] = useState<string[]>(
     searchParams.get("naf")?.split(",").filter(Boolean) || []
   );
@@ -49,14 +84,15 @@ export function FiltersSidebar({
   const [minAge, setMinAge] = useState(
     parseInt(searchParams.get("age") || "0")
   );
+  const [excludeEI, setExcludeEI] = useState(
+    searchParams.get("no_ei") === "1"
+  );
 
-  // Filter departements by selected regions
   const filteredDepts =
     selectedRegions.length > 0
       ? departements.filter((d) => selectedRegions.includes(d.code_region))
       : departements;
 
-  // Filter NAF codes by search
   const filteredNaf = nafSearch
     ? nafCodes.filter(
         (n) =>
@@ -75,6 +111,7 @@ export function FiltersSidebar({
     if (effectifMax !== "53") params.set("eff_max", effectifMax);
     if (denomination) params.set("q", denomination);
     if (minAge > 0) params.set("age", minAge.toString());
+    if (excludeEI) params.set("no_ei", "1");
     params.set("page", "1");
 
     router.push(`/dashboard?${params.toString()}`);
@@ -84,10 +121,11 @@ export function FiltersSidebar({
     setSelectedNaf([]);
     setSelectedRegions([]);
     setSelectedDepts([]);
-    setEffectifMin("03");
-    setEffectifMax("42");
+    setEffectifMin("00");
+    setEffectifMax("53");
     setDenomination("");
     setMinAge(0);
+    setExcludeEI(false);
     router.push("/dashboard");
   }
 
@@ -102,7 +140,6 @@ export function FiltersSidebar({
       const next = prev.includes(code)
         ? prev.filter((c) => c !== code)
         : [...prev, code];
-      // Clear dept selections if region changes
       setSelectedDepts((d) =>
         d.filter((dc) =>
           departements
@@ -138,9 +175,9 @@ export function FiltersSidebar({
       </div>
 
       <ScrollArea className="flex-1 px-5">
-        <div className="space-y-5 pb-4">
+        <div className="space-y-3 pb-4">
           {/* Recherche par nom */}
-          <div className="space-y-2">
+          <div className="space-y-2 border-b border-zinc-800 pb-3">
             <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Recherche par nom</Label>
             <Input
               placeholder="Dénomination..."
@@ -151,134 +188,145 @@ export function FiltersSidebar({
             />
           </div>
 
-          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
+          {/* Exclure EI */}
+          <div className="border-b border-zinc-800 pb-3">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl px-1 py-1.5">
+              <input
+                type="checkbox"
+                checked={excludeEI}
+                onChange={(e) => setExcludeEI(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-700 bg-zinc-800 accent-indigo-500"
+              />
+              <span className="text-xs font-medium text-zinc-300">
+                Exclure les entrepreneurs individuels
+              </span>
+            </label>
+          </div>
 
           {/* NAF Code */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Secteur (code NAF)</Label>
-            <Input
-              placeholder="Rechercher un code NAF..."
-              value={nafSearch}
-              onChange={(e) => setNafSearch(e.target.value)}
-              className="rounded-xl text-sm"
-            />
-            {selectedNaf.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedNaf.map((code) => (
-                  <Badge
-                    key={code}
-                    className="cursor-pointer rounded-lg bg-indigo-950 text-xs text-indigo-400 hover:bg-indigo-900"
-                    onClick={() => toggleNaf(code)}
-                  >
-                    {code} <X className="ml-1 h-3 w-3" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <ScrollArea className="h-40 rounded-xl border border-zinc-800">
-              <div className="p-1.5">
-                {filteredNaf.map((naf) => (
-                  <button
-                    key={naf.code}
-                    onClick={() => toggleNaf(naf.code)}
-                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-indigo-950/50 ${
-                      selectedNaf.includes(naf.code)
-                        ? "bg-indigo-950/50 font-medium text-indigo-400"
-                        : "text-zinc-400"
-                    }`}
-                  >
-                    <span className="font-mono text-zinc-500">{naf.code}</span>{" "}
-                    {naf.libelle}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
+          <CollapsibleSection title="Secteur (code NAF)">
+            <div className="space-y-2">
+              <Input
+                placeholder="Rechercher un code NAF..."
+                value={nafSearch}
+                onChange={(e) => setNafSearch(e.target.value)}
+                className="rounded-xl text-sm"
+              />
+              {selectedNaf.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {selectedNaf.map((code) => (
+                    <Badge
+                      key={code}
+                      className="cursor-pointer rounded-lg bg-indigo-950 text-xs text-indigo-400 hover:bg-indigo-900"
+                      onClick={() => toggleNaf(code)}
+                    >
+                      {code} <X className="ml-1 h-3 w-3" />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <ScrollArea className="h-40 rounded-xl border border-zinc-800">
+                <div className="p-1.5">
+                  {filteredNaf.map((naf) => (
+                    <button
+                      key={naf.code}
+                      onClick={() => toggleNaf(naf.code)}
+                      className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-indigo-950/50 ${
+                        selectedNaf.includes(naf.code)
+                          ? "bg-indigo-950/50 font-medium text-indigo-400"
+                          : "text-zinc-400"
+                      }`}
+                    >
+                      <span className="font-mono text-zinc-500">{naf.code}</span>{" "}
+                      {naf.libelle}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </CollapsibleSection>
 
           {/* Région */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Région</Label>
-            {selectedRegions.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedRegions.map((code) => {
-                  const region = regions.find((r) => r.code === code);
-                  return (
-                    <Badge
-                      key={code}
-                      className="cursor-pointer rounded-lg bg-emerald-950 text-xs text-emerald-400 hover:bg-emerald-900"
-                      onClick={() => toggleRegion(code)}
+          <CollapsibleSection title="Région">
+            <div className="space-y-2">
+              {selectedRegions.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {selectedRegions.map((code) => {
+                    const region = regions.find((r) => r.code === code);
+                    return (
+                      <Badge
+                        key={code}
+                        className="cursor-pointer rounded-lg bg-emerald-950 text-xs text-emerald-400 hover:bg-emerald-900"
+                        onClick={() => toggleRegion(code)}
+                      >
+                        {region?.nom} <X className="ml-1 h-3 w-3" />
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+              <ScrollArea className="h-32 rounded-xl border border-zinc-800">
+                <div className="p-1.5">
+                  {regions.map((region) => (
+                    <button
+                      key={region.code}
+                      onClick={() => toggleRegion(region.code)}
+                      className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-emerald-950/50 ${
+                        selectedRegions.includes(region.code)
+                          ? "bg-emerald-950/50 font-medium text-emerald-400"
+                          : "text-zinc-400"
+                      }`}
                     >
-                      {region?.nom} <X className="ml-1 h-3 w-3" />
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-            <ScrollArea className="h-32 rounded-xl border border-zinc-800">
-              <div className="p-1.5">
-                {regions.map((region) => (
-                  <button
-                    key={region.code}
-                    onClick={() => toggleRegion(region.code)}
-                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-emerald-950/50 ${
-                      selectedRegions.includes(region.code)
-                        ? "bg-emerald-950/50 font-medium text-emerald-400"
-                        : "text-zinc-400"
-                    }`}
-                  >
-                    {region.nom}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+                      {region.nom}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </CollapsibleSection>
 
           {/* Département */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Département</Label>
-            {selectedDepts.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedDepts.map((code) => {
-                  const dept = departements.find((d) => d.code === code);
-                  return (
-                    <Badge
-                      key={code}
-                      className="cursor-pointer rounded-lg bg-amber-950 text-xs text-amber-400 hover:bg-amber-900"
-                      onClick={() => toggleDept(code)}
+          <CollapsibleSection title="Département" defaultOpen={false}>
+            <div className="space-y-2">
+              {selectedDepts.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {selectedDepts.map((code) => {
+                    const dept = departements.find((d) => d.code === code);
+                    return (
+                      <Badge
+                        key={code}
+                        className="cursor-pointer rounded-lg bg-amber-950 text-xs text-amber-400 hover:bg-amber-900"
+                        onClick={() => toggleDept(code)}
+                      >
+                        {code} - {dept?.nom} <X className="ml-1 h-3 w-3" />
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+              <ScrollArea className="h-32 rounded-xl border border-zinc-800">
+                <div className="p-1.5">
+                  {filteredDepts.map((dept) => (
+                    <button
+                      key={dept.code}
+                      onClick={() => toggleDept(dept.code)}
+                      className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-amber-950/50 ${
+                        selectedDepts.includes(dept.code)
+                          ? "bg-amber-950/50 font-medium text-amber-400"
+                          : "text-zinc-400"
+                      }`}
                     >
-                      {code} - {dept?.nom} <X className="ml-1 h-3 w-3" />
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-            <ScrollArea className="h-32 rounded-xl border border-zinc-800">
-              <div className="p-1.5">
-                {filteredDepts.map((dept) => (
-                  <button
-                    key={dept.code}
-                    onClick={() => toggleDept(dept.code)}
-                    className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-amber-950/50 ${
-                      selectedDepts.includes(dept.code)
-                        ? "bg-amber-950/50 font-medium text-amber-400"
-                        : "text-zinc-400"
-                    }`}
-                  >
-                    <span className="font-mono text-zinc-500">{dept.code}</span>{" "}
-                    {dept.nom}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          <Separator className="-mx-5 w-[calc(100%+2.5rem)] bg-zinc-800" />
+                      <span className="font-mono text-zinc-500">{dept.code}</span>{" "}
+                      {dept.nom}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </CollapsibleSection>
 
           {/* Effectif */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Tranche effectif</Label>
+          <CollapsibleSection title="Tranche effectif" defaultOpen={false}>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <span className="text-xs text-zinc-500">Min</span>
@@ -309,22 +357,24 @@ export function FiltersSidebar({
                 </select>
               </div>
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Ancienneté */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Ancienneté minimum: <span className="text-indigo-400">{minAge} ans</span>
-            </Label>
-            <input
-              type="range"
-              min={0}
-              max={50}
-              value={minAge}
-              onChange={(e) => setMinAge(parseInt(e.target.value))}
-              className="w-full accent-indigo-500"
-            />
-          </div>
+          <CollapsibleSection title="Ancienneté" defaultOpen={false}>
+            <div className="space-y-2">
+              <span className="text-xs text-zinc-400">
+                Minimum : <span className="text-indigo-400">{minAge} ans</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={50}
+                value={minAge}
+                onChange={(e) => setMinAge(parseInt(e.target.value))}
+                className="w-full accent-indigo-500"
+              />
+            </div>
+          </CollapsibleSection>
         </div>
       </ScrollArea>
 

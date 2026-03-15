@@ -18,7 +18,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     getRefDepartements(),
   ]);
 
-  const hasFilters = params.naf || params.depts || params.q || params.regions || params.eff_min || params.eff_max || params.age || params.page;
+  const hasFilters = params.naf || params.depts || params.q || params.regions || params.eff_min || params.eff_max || params.age || params.page || params.no_ei;
   const page = parseInt(params.page || "1");
   const perPage = 50;
 
@@ -36,6 +36,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       effectif_min: params.eff_min || "",
       effectif_max: params.eff_max || "",
       formes: params.formes?.split(",").filter(Boolean) || [],
+      exclude_ei: params.no_ei === "1",
       min_age: parseInt(params.age || "0"),
       denomination: params.q || "",
       page,

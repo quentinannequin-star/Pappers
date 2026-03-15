@@ -44,6 +44,11 @@ export async function searchCompanies(filters: SearchFilters) {
     query = query.lte("tranche_effectif", filters.effectif_max);
   }
 
+  // Exclude entrepreneurs individuels (forme_juridique = 1000)
+  if (filters.exclude_ei) {
+    query = query.neq("forme_juridique", "1000");
+  }
+
   // Denomination search
   if (filters.denomination) {
     query = query.ilike("denomination", `%${filters.denomination}%`);
@@ -146,7 +151,7 @@ export async function getRefDepartements(regionCodes?: string[]) {
   let query = supabase
     .from("ref_departements")
     .select("code, nom, code_region")
-    .order("nom");
+    .order("code");
 
   if (regionCodes && regionCodes.length > 0) {
     query = query.in("code_region", regionCodes);
