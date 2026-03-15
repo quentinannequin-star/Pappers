@@ -47,6 +47,36 @@ export async function fetchDirigeants(
   }
 }
 
+// Fetch ALL dirigeants for a SIREN (for CSV export)
+export async function fetchAllDirigeants(
+  siren: string
+): Promise<{ nom: string; prenom: string; fonction: string }[]> {
+  try {
+    const resp = await fetch(`${RECHERCHE_API_BASE}?q=${siren}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!resp.ok) return [];
+
+    const data = await resp.json();
+    const results = data.results || [];
+    if (results.length === 0) return [];
+
+    const company = results[0];
+    // Verify SIREN matches (API searches by text, not exact SIREN)
+    if (company.siren !== siren) return [];
+
+    const dirigeants = company.dirigeants || [];
+    return dirigeants.map((d: { nom?: string; prenom?: string; qualite?: string }) => ({
+      nom: d.nom || "",
+      prenom: d.prenom || "",
+      fonction: d.qualite || "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // Rate limiter: max N requests per second
 export function rateLimit(perSecond: number) {
   let lastCall = 0;

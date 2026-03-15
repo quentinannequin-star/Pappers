@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ChevronLeft, ChevronRight, Sparkles, Search } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Sparkles, Search, Loader2 } from "lucide-react";
 import type { SearchResult } from "@/types/database";
 import { EFFECTIF_LABELS } from "@/types/database";
 import { useState } from "react";
@@ -32,6 +32,7 @@ export function ResultsTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [enriching, setEnriching] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const totalPages = Math.ceil(total / perPage);
   const enrichedCount = results.filter((r) => r.date_enrichissement).length;
@@ -43,9 +44,29 @@ export function ResultsTable({
   }
 
   async function handleExport() {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    window.open(`/api/export?${params.toString()}`, "_blank");
+    setExporting(true);
+    try {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
+      const response = await fetch(`/api/export?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const timestamp = new Date().toISOString().slice(0, 10);
+      a.download = `alvora_export_${timestamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export error:", err);
+    } finally {
+      setExporting(false);
+    }
   }
 
   async function handleEnrich() {
@@ -108,11 +129,15 @@ export function ResultsTable({
             variant="outline"
             size="sm"
             onClick={handleExport}
-            disabled={total === 0}
+            disabled={total === 0 || exporting}
             className="rounded-xl"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {exporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            {exporting ? "Génération en cours..." : "Export CSV"}
           </Button>
         </div>
       </div>
