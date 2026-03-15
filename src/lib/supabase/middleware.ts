@@ -39,11 +39,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected pages: redirect to login if not authenticated
+  // Skip API routes — they handle their own auth
   if (
     !user &&
     pathname !== "/login" &&
     pathname !== "/register" &&
-    pathname !== "/"
+    pathname !== "/" &&
+    !pathname.startsWith("/api/")
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
